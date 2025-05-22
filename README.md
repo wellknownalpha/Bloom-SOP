@@ -34,5 +34,9 @@ GENKIT_API_KEY=your_genkit_api_key
 
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
 
-WhatHow to Get It Notes
-node_modules/ npm install Required to run the app .next/ npm run dev or npm run build Build output, auto-generated public/ Manually add or copy from Firebase Studio For favicons/images .env Manually create from .env.example Contains local secrets
+| What            | How to Get It                             | Notes                        |
+| --------------- | ----------------------------------------- | ---------------------------- |
+| `node_modules/` | `npm install`                             | Required to run the app      |
+| `.next/`        | `npm run dev` or `npm run build`          | Build output, auto-generated |
+| `public/`       | Manually add or copy from Firebase Studio | For favicons/images          |
+| `.env`          | Manually create from `.env.example`       | Contains local secrets       |

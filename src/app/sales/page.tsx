@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -28,11 +29,11 @@ interface CartItem extends Product {
 }
 
 const initialProducts: Product[] = [
-  { id: '1', name: 'Red Roses (Dozen)', price: 25.99, stock: 50, category: 'Flowers', imageUrl: 'https://placehold.co/100x100.png' },
-  { id: '2', name: 'White Lilies (Bunch)', price: 18.50, stock: 30, category: 'Flowers', imageUrl: 'https://placehold.co/100x100.png' },
-  { id: '3', name: 'Glass Vase (Medium)', price: 12.00, stock: 20, category: 'Vases', imageUrl: 'https://placehold.co/100x100.png' },
-  { id: '4', name: 'Orchid Plant', price: 35.00, stock: 15, category: 'Plants', imageUrl: 'https://placehold.co/100x100.png' },
-  { id: '5', name: 'Chocolates Box', price: 15.75, stock: 25, category: 'Gifts', imageUrl: 'https://placehold.co/100x100.png' },
+  { id: '1', name: 'Red Roses (Dozen)', price: 25.99, stock: 50, category: 'Flowers', imageUrl: 'https://placehold.co/300x200.png' },
+  { id: '2', name: 'White Lilies (Bunch)', price: 18.50, stock: 30, category: 'Flowers', imageUrl: 'https://placehold.co/300x200.png' },
+  { id: '3', name: 'Glass Vase (Medium)', price: 12.00, stock: 20, category: 'Vases', imageUrl: 'https://placehold.co/300x200.png' },
+  { id: '4', name: 'Orchid Plant', price: 35.00, stock: 15, category: 'Plants', imageUrl: 'https://placehold.co/300x200.png' },
+  { id: '5', name: 'Chocolates Box', price: 15.75, stock: 25, category: 'Gifts', imageUrl: 'https://placehold.co/300x200.png' },
 ];
 
 
@@ -112,10 +113,10 @@ export default function SalesPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[500px]">
+              <ScrollArea className="h-[500px] pr-3">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredProducts.map(product => (
-                    <Card key={product.id} className="overflow-hidden">
+                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200 ease-in-out transform hover:-translate-y-1">
                       <Image
                         src={product.imageUrl || `https://placehold.co/300x200.png`}
                         alt={product.name}
@@ -125,12 +126,15 @@ export default function SalesPage() {
                         data-ai-hint={`${product.category === 'Vases' ? 'vase' : 'flower product'}`}
                       />
                       <CardHeader className="p-4">
-                        <CardTitle className="text-base">{product.name}</CardTitle>
-                        <CardDescription>${product.price.toFixed(2)} - Stock: {product.stock}</CardDescription>
+                        <CardTitle className="text-base leading-tight mb-1">{product.name}</CardTitle>
+                        <div className="flex items-baseline justify-between">
+                            <p className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">Stock: {product.stock}</p>
+                        </div>
                       </CardHeader>
                       <CardFooter className="p-4 pt-0">
-                        <Button size="sm" className="w-full" onClick={() => addToCart(product)}>
-                          <PlusCircle className="mr-2 h-4 w-4" /> Add to Cart
+                        <Button size="sm" className="w-full" onClick={() => addToCart(product)} disabled={product.stock === 0}>
+                          <PlusCircle className="mr-2 h-4 w-4" /> {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                         </Button>
                       </CardFooter>
                     </Card>
@@ -151,14 +155,14 @@ export default function SalesPage() {
               {cart.length === 0 ? (
                 <p className="text-muted-foreground">Cart is empty.</p>
               ) : (
-                <ScrollArea className="h-[300px]">
+                <ScrollArea className="h-[300px] pr-3">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Item</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Action</TableHead>
+                        <TableHead className="text-center w-[70px]">Qty</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead className="w-[50px]"><span className="sr-only">Remove</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -170,12 +174,13 @@ export default function SalesPage() {
                               type="number"
                               value={item.quantity}
                               onChange={e => updateQuantity(item.id, parseInt(e.target.value))}
-                              className="h-8 w-16 text-center"
+                              className="h-8 w-16 text-center px-1"
                               min="0"
+                              max={item.stock}
                             />
                           </TableCell>
-                          <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">
                             <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -187,29 +192,29 @@ export default function SalesPage() {
                 </ScrollArea>
               )}
               <Separator className="my-4" />
-              <div className="flex justify-between font-semibold">
+              <div className="flex justify-between items-center text-lg font-bold text-primary">
                 <span>Total:</span>
                 <span>${cartTotal.toFixed(2)}</span>
               </div>
-              <div className="mt-4">
-                <Label className="mb-2 block">Payment Method</Label>
+              <div className="mt-6">
+                <Label className="mb-2 block font-medium">Payment Method</Label>
                 <RadioGroup value={paymentMethod} onValueChange={(value: 'cash' | 'card' | 'mobile') => setPaymentMethod(value)} className="flex space-x-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="cash" id="cash" />
-                    <Label htmlFor="cash" className="flex items-center gap-1"><DollarSign className="h-4 w-4"/> Cash</Label>
+                    <Label htmlFor="cash" className="flex items-center gap-1 cursor-pointer"><DollarSign className="h-4 w-4"/> Cash</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="card" id="card" />
-                    <Label htmlFor="card" className="flex items-center gap-1"><CreditCard className="h-4 w-4"/> Card</Label>
+                    <Label htmlFor="card" className="flex items-center gap-1 cursor-pointer"><CreditCard className="h-4 w-4"/> Card</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="mobile" id="mobile" />
-                    <Label htmlFor="mobile" className="flex items-center gap-1"><Smartphone className="h-4 w-4"/> Mobile</Label>
+                    <Label htmlFor="mobile" className="flex items-center gap-1 cursor-pointer"><Smartphone className="h-4 w-4"/> Mobile</Label>
                   </div>
                 </RadioGroup>
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="mt-2">
               <Button className="w-full" size="lg" onClick={processSale} disabled={cart.length === 0}>
                 Process Sale
               </Button>
@@ -220,3 +225,5 @@ export default function SalesPage() {
     </>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon: Icon, description, actionLink, actionText }: StatCardProps) {
   return (
-    <Card>
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className="h-5 w-5 text-muted-foreground" />
@@ -66,10 +67,10 @@ export default function DashboardPage() {
           actionLink="/customers"
           actionText="View Customers"
         />
-        <Card className="md:col-span-2 lg:col-span-1">
+        <Card className="md:col-span-2 lg:col-span-1 bg-primary/5 hover:shadow-lg transition-shadow border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <Lightbulb className="h-5 w-5" />
               AI Arrangement Suggester
             </CardTitle>
             <CardDescription>
@@ -86,3 +87,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    

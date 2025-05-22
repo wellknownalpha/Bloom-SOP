@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
@@ -47,7 +48,7 @@ const inventoryItemSchema = z.object({
   quantity: z.coerce.number().min(0, "Quantity cannot be negative"),
   price: z.coerce.number().min(0.01, "Price must be positive"),
   description: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional(),
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
 });
 
 type InventoryItemSchema = z.infer<typeof inventoryItemSchema>;
@@ -145,11 +146,11 @@ export default function InventoryPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
+              <TableHead className="w-[64px] sm:w-[100px]">Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead className="hidden md:table-cell">Price</TableHead>
-              <TableHead>Quantity</TableHead>
+              <TableHead className="hidden md:table-cell text-right">Price</TableHead>
+              <TableHead className="text-right">Quantity</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -159,7 +160,7 @@ export default function InventoryPage() {
             {filteredInventory.length > 0 ? (
               filteredInventory.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="hidden sm:table-cell">
+                  <TableCell className="table-cell">
                     <Image
                       alt={item.name}
                       className="aspect-square rounded-md object-cover"
@@ -171,8 +172,8 @@ export default function InventoryPage() {
                   </TableCell>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>{item.category}</TableCell>
-                  <TableCell className="hidden md:table-cell">${item.price.toFixed(2)}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell className="hidden md:table-cell text-right">${item.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -228,10 +229,12 @@ function InventoryItemFormDialog({ isOpen, onClose, onSubmit, item }: InventoryI
   });
 
   useEffect(() => {
-    if (item) {
-      reset(item);
-    } else {
-      reset({ name: '', category: '', quantity: 0, price: 0, description: '', imageUrl: ''});
+    if (isOpen) {
+      if (item) {
+        reset(item);
+      } else {
+        reset({ name: '', category: '', quantity: 0, price: 0, description: '', imageUrl: ''});
+      }
     }
   }, [item, reset, isOpen]);
 
@@ -258,7 +261,7 @@ function InventoryItemFormDialog({ isOpen, onClose, onSubmit, item }: InventoryI
           </div>
           <div>
             <Label htmlFor="category">Category</Label>
-            <Select onValueChange={(value) => setValue("category", value)} defaultValue={item?.category}>
+            <Select onValueChange={(value) => setValue("category", value, { shouldValidate: true })} defaultValue={item?.category}>
               <SelectTrigger id="category" className="mt-1">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
@@ -282,7 +285,7 @@ function InventoryItemFormDialog({ isOpen, onClose, onSubmit, item }: InventoryI
           </div>
           <div>
             <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-            <Input id="imageUrl" {...register("imageUrl")} className="mt-1" placeholder="https://placehold.co/100x100.png" />
+            <Input id="imageUrl" {...register("imageUrl")} className="mt-1" placeholder="https://placehold.co/100x100.png" data-ai-hint="product image url" />
             {errors.imageUrl && <p className="text-sm text-destructive mt-1">{errors.imageUrl.message}</p>}
           </div>
           <div>
@@ -300,3 +303,5 @@ function InventoryItemFormDialog({ isOpen, onClose, onSubmit, item }: InventoryI
     </Dialog>
   );
 }
+
+    

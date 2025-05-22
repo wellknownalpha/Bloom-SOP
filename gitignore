@@ -1,0 +1,15 @@
+# Output & deps
+.next/
+node_modules/
+out/
+
+# Firebase Studio
+components.json
+.modified
+
+# Env
+.env
+.env.*.local
+
+# Logs
+npm-debug.log*

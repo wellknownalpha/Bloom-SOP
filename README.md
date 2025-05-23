@@ -151,3 +151,5 @@ cp .env.example .env         # Then fill in secrets
 npm run dev
 ```
 
+Also remember to replace the placeholder UPI ID (merchant@exampleupi) with your actual UPI ID in the code.
+I've added a comment to the src/app/sales/page.tsx file. When you're ready to use this with your actual UPI ID, you can find the line with // IMPORTANT: and make the change there. This will ensure that scanning the QR code directs payment to your account.

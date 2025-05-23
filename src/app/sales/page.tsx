@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { ShoppingCart, PlusCircle, Trash2, CreditCard, Smartphone, DollarSign, Search } from "lucide-react";
+import { ShoppingCart, PlusCircle, Trash2, CreditCard, Smartphone, DollarSign, Search, Landmark } from "lucide-react"; // Added Landmark for bank
 import { useToast } from "@/hooks/use-toast";
 
 interface Product {
@@ -48,6 +48,9 @@ export default function SalesPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [qrDialogTitle, setQrDialogTitle] = useState("Scan to Pay");
+  const [qrDialogDescription, setQrDialogDescription] = useState("Scan the QR code with your mobile payment app.");
+
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {
@@ -85,15 +88,23 @@ export default function SalesPage() {
       return;
     }
 
+    setPaymentAmount(cartTotal);
+    const saleNote = `Payment for Bloom POS - Order Total: $${cartTotal.toFixed(2)}`;
+
     if (paymentMethod === 'mobile') {
-      setPaymentAmount(cartTotal);
-      const saleNote = `Payment for Bloom POS - Order Total: $${cartTotal.toFixed(2)}`;
-      // IMPORTANT: Replace "merchant@exampleupi" with your actual UPI ID to receive payments.
-      const upiData = encodeURIComponent(`upi://pay?pa=merchant@exampleupi&pn=Bloom POS&am=${cartTotal.toFixed(2)}&cu=USD&tn=${encodeURIComponent(saleNote)}`);
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${upiData}&qzone=1&margin=1`;
+      // IMPORTANT: Replace placeholders with your actual bank details.
+      // This QR code will display these details as text for manual bank transfer.
+      // It will NOT automatically initiate a payment.
+      const bankDetailsText = `Please transfer to:\nBank Name: YOUR_BANK_NAME_HERE\nAccount No: YOUR_ACCOUNT_NUMBER_HERE\nIFSC Code: YOUR_IFSC_CODE_HERE\nAmount: $${cartTotal.toFixed(2)}\nReference: Bloom POS Order`;
+      
+      const qrData = encodeURIComponent(bankDetailsText);
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&qzone=1&margin=1`;
+      
       setQrCodeUrl(qrUrl);
+      setQrDialogTitle("Bank Transfer Details");
+      setQrDialogDescription("Scan the QR code to view bank details for manual transfer.");
       setIsQrDialogOpen(true);
-      toast({ title: "QR Code Generated", description: "Please scan the QR code to complete the payment." });
+      toast({ title: "Bank Details QR Generated", description: "Scan the QR to get details for manual bank transfer." });
     } else {
       // Simulate sale processing for cash/card
       toast({ title: "Sale Processed!", description: `Total: $${cartTotal.toFixed(2)}. Payment via ${paymentMethod}.` });
@@ -104,8 +115,9 @@ export default function SalesPage() {
   const handleQrDialogClose = () => {
     setIsQrDialogOpen(false);
     // Simulate payment confirmation after QR code is shown and dialog is closed by user
+    // This step assumes the user has completed the manual transfer if 'mobile' payment was chosen.
     setCart([]); // Clear cart
-    toast({ title: "Sale Completed!", description: "Thank you for your purchase." });
+    toast({ title: "Sale Completed!", description: "Thank you for your purchase. Payment presumed received." });
   };
 
   const filteredProducts = products.filter(product =>
@@ -233,7 +245,8 @@ export default function SalesPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="mobile" id="mobile" />
-                    <Label htmlFor="mobile" className="flex items-center gap-1.5 cursor-pointer text-sm"><Smartphone className="h-4 w-4 text-muted-foreground"/> Mobile</Label>
+                    {/* Changed icon to Landmark and text to Bank Transfer for clarity */}
+                    <Label htmlFor="mobile" className="flex items-center gap-1.5 cursor-pointer text-sm"><Landmark className="h-4 w-4 text-muted-foreground"/> Bank Transfer</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -254,23 +267,23 @@ export default function SalesPage() {
           setIsQrDialogOpen(true);
         }
       }}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-md"> {/* Increased width slightly for bank details text */}
           <DialogHeader>
-            <DialogTitle className="text-center text-xl">Scan to Pay</DialogTitle>
-            <DialogDescription className="text-center">
-              Scan the QR code with your mobile payment app. <br /> Amount Due: <span className="font-bold text-lg text-primary">${paymentAmount.toFixed(2)}</span>
+            <DialogTitle className="text-center text-xl">{qrDialogTitle}</DialogTitle>
+            <DialogDescription className="text-center whitespace-pre-line"> {/* Allow newlines in description */}
+              {qrDialogDescription} <br /> Amount Due: <span className="font-bold text-lg text-primary">${paymentAmount.toFixed(2)}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-6 bg-muted rounded-md my-2">
             {qrCodeUrl ? (
-              <Image src={qrCodeUrl} alt="Payment QR Code" width={220} height={220} data-ai-hint="payment qr code" className="rounded-md shadow-md" />
+              <Image src={qrCodeUrl} alt="Bank Transfer Details QR Code" width={220} height={220} data-ai-hint="bank details qr code" className="rounded-md shadow-md" />
             ) : (
               <div className="h-[220px] w-[220px] flex items-center justify-center text-muted-foreground">Generating QR Code...</div>
             )}
           </div>
           <DialogFooter className="sm:justify-center">
             <Button type="button" onClick={handleQrDialogClose} className="w-full sm:w-auto">
-              Close & Confirm Payment
+              Close & Confirm Payment Received
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -278,3 +291,6 @@ export default function SalesPage() {
     </>
   );
 }
+
+
+    

@@ -1,3 +1,5 @@
+Prototype version with payment methode upadated with UPI
+
 Firebase Studio
 
 This is a NextJS starter in Firebase Studio.

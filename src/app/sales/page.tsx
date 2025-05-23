@@ -88,20 +88,23 @@ export default function SalesPage() {
     if (paymentMethod === 'mobile') {
       setPaymentAmount(cartTotal);
       const saleNote = `Payment for Bloom POS - Order Total: $${cartTotal.toFixed(2)}`;
+      // IMPORTANT: Replace "merchant@exampleupi" with your actual UPI ID to receive payments.
       const upiData = encodeURIComponent(`upi://pay?pa=merchant@exampleupi&pn=Bloom POS&am=${cartTotal.toFixed(2)}&cu=USD&tn=${encodeURIComponent(saleNote)}`);
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${upiData}&qzone=1&margin=1`;
       setQrCodeUrl(qrUrl);
       setIsQrDialogOpen(true);
       toast({ title: "QR Code Generated", description: "Please scan the QR code to complete the payment." });
     } else {
+      // Simulate sale processing for cash/card
       toast({ title: "Sale Processed!", description: `Total: $${cartTotal.toFixed(2)}. Payment via ${paymentMethod}.` });
-      setCart([]); 
+      setCart([]); // Clear cart after successful sale
     }
   };
 
   const handleQrDialogClose = () => {
     setIsQrDialogOpen(false);
-    setCart([]); 
+    // Simulate payment confirmation after QR code is shown and dialog is closed by user
+    setCart([]); // Clear cart
     toast({ title: "Sale Completed!", description: "Thank you for your purchase." });
   };
 
@@ -275,5 +278,3 @@ export default function SalesPage() {
     </>
   );
 }
-
-    

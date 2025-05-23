@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ShoppingCart, PlusCircle, Trash2, CreditCard, Smartphone, DollarSign, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -43,6 +44,10 @@ export default function SalesPage() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'mobile'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {
@@ -79,9 +84,25 @@ export default function SalesPage() {
       toast({ title: "Empty Cart", description: "Please add items to the cart before processing sale.", variant: "destructive" });
       return;
     }
-    // In a real app, this would involve payment processing and inventory update
-    toast({ title: "Sale Processed!", description: `Total: $${cartTotal.toFixed(2)}. Payment via ${paymentMethod}.` });
-    setCart([]); // Clear cart after sale
+
+    if (paymentMethod === 'mobile') {
+      setPaymentAmount(cartTotal);
+      const saleNote = `Payment for Bloom POS - Order Total: $${cartTotal.toFixed(2)}`;
+      const upiData = encodeURIComponent(`upi://pay?pa=merchant@exampleupi&pn=Bloom POS&am=${cartTotal.toFixed(2)}&cu=USD&tn=${encodeURIComponent(saleNote)}`);
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${upiData}&qzone=1&margin=1`;
+      setQrCodeUrl(qrUrl);
+      setIsQrDialogOpen(true);
+      toast({ title: "QR Code Generated", description: "Please scan the QR code to complete the payment." });
+    } else {
+      toast({ title: "Sale Processed!", description: `Total: $${cartTotal.toFixed(2)}. Payment via ${paymentMethod}.` });
+      setCart([]); 
+    }
+  };
+
+  const handleQrDialogClose = () => {
+    setIsQrDialogOpen(false);
+    setCart([]); 
+    toast({ title: "Sale Completed!", description: "Thank you for your purchase." });
   };
 
   const filteredProducts = products.filter(product =>
@@ -98,7 +119,7 @@ export default function SalesPage() {
       />
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2">
-          <Card>
+          <Card className="shadow-md">
             <CardHeader>
               <CardTitle>Products</CardTitle>
               <div className="relative mt-2">
@@ -116,19 +137,19 @@ export default function SalesPage() {
               <ScrollArea className="h-[500px] pr-3">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredProducts.map(product => (
-                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200 ease-in-out transform hover:-translate-y-1">
+                    <Card key={product.id} className="overflow-hidden transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1">
                       <Image
                         src={product.imageUrl || `https://placehold.co/300x200.png`}
                         alt={product.name}
                         width={300}
                         height={200}
                         className="h-32 w-full object-cover"
-                        data-ai-hint={`${product.category === 'Vases' ? 'vase' : 'flower product'}`}
+                        data-ai-hint={`${product.category === 'Vases' ? 'vase' : product.category === 'Plants' ? 'plant' : 'flower product'}`}
                       />
                       <CardHeader className="p-4">
                         <CardTitle className="text-base leading-tight mb-1">{product.name}</CardTitle>
                         <div className="flex items-baseline justify-between">
-                            <p className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</p>
+                            <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
                             <p className="text-xs text-muted-foreground">Stock: {product.stock}</p>
                         </div>
                       </CardHeader>
@@ -147,13 +168,13 @@ export default function SalesPage() {
         </div>
 
         <div className="md:col-span-1">
-          <Card>
+          <Card className="shadow-md">
             <CardHeader>
               <CardTitle>Current Sale</CardTitle>
             </CardHeader>
             <CardContent>
               {cart.length === 0 ? (
-                <p className="text-muted-foreground">Cart is empty.</p>
+                <p className="text-center text-muted-foreground py-10">Cart is empty. <br/>Add products to start a sale.</p>
               ) : (
                 <ScrollArea className="h-[300px] pr-3">
                   <Table>
@@ -162,26 +183,26 @@ export default function SalesPage() {
                         <TableHead>Item</TableHead>
                         <TableHead className="text-center w-[70px]">Qty</TableHead>
                         <TableHead className="text-right">Price</TableHead>
-                        <TableHead className="w-[50px]"><span className="sr-only">Remove</span></TableHead>
+                        <TableHead className="w-[50px] text-right"><span className="sr-only">Remove</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {cart.map(item => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium text-xs sm:text-sm">{item.name}</TableCell>
-                          <TableCell>
+                          <TableCell className="px-1">
                             <Input
                               type="number"
                               value={item.quantity}
                               onChange={e => updateQuantity(item.id, parseInt(e.target.value))}
-                              className="h-8 w-16 text-center px-1"
+                              className="h-8 w-14 text-center px-1"
                               min="0"
                               max={item.stock}
                             />
                           </TableCell>
                           <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
+                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)} className="h-8 w-8">
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </TableCell>
@@ -192,29 +213,29 @@ export default function SalesPage() {
                 </ScrollArea>
               )}
               <Separator className="my-4" />
-              <div className="flex justify-between items-center text-lg font-bold text-primary">
+              <div className="flex justify-between items-center text-2xl font-bold text-primary mb-1">
                 <span>Total:</span>
                 <span>${cartTotal.toFixed(2)}</span>
               </div>
               <div className="mt-6">
-                <Label className="mb-2 block font-medium">Payment Method</Label>
-                <RadioGroup value={paymentMethod} onValueChange={(value: 'cash' | 'card' | 'mobile') => setPaymentMethod(value)} className="flex space-x-4">
+                <Label className="mb-2 block font-medium text-sm">Payment Method</Label>
+                <RadioGroup value={paymentMethod} onValueChange={(value: 'cash' | 'card' | 'mobile') => setPaymentMethod(value)} className="flex space-x-3 sm:space-x-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="cash" id="cash" />
-                    <Label htmlFor="cash" className="flex items-center gap-1 cursor-pointer"><DollarSign className="h-4 w-4"/> Cash</Label>
+                    <Label htmlFor="cash" className="flex items-center gap-1.5 cursor-pointer text-sm"><DollarSign className="h-4 w-4 text-muted-foreground"/> Cash</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="card" id="card" />
-                    <Label htmlFor="card" className="flex items-center gap-1 cursor-pointer"><CreditCard className="h-4 w-4"/> Card</Label>
+                    <Label htmlFor="card" className="flex items-center gap-1.5 cursor-pointer text-sm"><CreditCard className="h-4 w-4 text-muted-foreground"/> Card</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="mobile" id="mobile" />
-                    <Label htmlFor="mobile" className="flex items-center gap-1 cursor-pointer"><Smartphone className="h-4 w-4"/> Mobile</Label>
+                    <Label htmlFor="mobile" className="flex items-center gap-1.5 cursor-pointer text-sm"><Smartphone className="h-4 w-4 text-muted-foreground"/> Mobile</Label>
                   </div>
                 </RadioGroup>
               </div>
             </CardContent>
-            <CardFooter className="mt-2">
+            <CardFooter className="mt-4">
               <Button className="w-full" size="lg" onClick={processSale} disabled={cart.length === 0}>
                 Process Sale
               </Button>
@@ -222,6 +243,35 @@ export default function SalesPage() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={isQrDialogOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) { // Handle closing via Esc or overlay click
+          handleQrDialogClose();
+        } else {
+          setIsQrDialogOpen(true);
+        }
+      }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Scan to Pay</DialogTitle>
+            <DialogDescription className="text-center">
+              Scan the QR code with your mobile payment app. <br /> Amount Due: <span className="font-bold text-lg text-primary">${paymentAmount.toFixed(2)}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-6 bg-muted rounded-md my-2">
+            {qrCodeUrl ? (
+              <Image src={qrCodeUrl} alt="Payment QR Code" width={220} height={220} data-ai-hint="payment qr code" className="rounded-md shadow-md" />
+            ) : (
+              <div className="h-[220px] w-[220px] flex items-center justify-center text-muted-foreground">Generating QR Code...</div>
+            )}
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button type="button" onClick={handleQrDialogClose} className="w-full sm:w-auto">
+              Close & Confirm Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
